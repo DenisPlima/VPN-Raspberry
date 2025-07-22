@@ -18,10 +18,11 @@ Este repositório fornece:
 
 | Script                  | Descrição                                                  |
 |-------------------------|------------------------------------------------------------|
-| `01_habilitar_ssh.sh`       | Verifica e habilita o serviço SSH no Raspberry Pi.        |
-| `02_configurar_modem.sh`     | Detecta, ativa e configura modems 4G automaticamente.      |
-| `03_instalar_tailscale.sh`   | Instala o Tailscale, inicia a autenticação e agenda atualizações. |
-| `sanfer_instalador.sh`        | Instalador interativo que executa os três scripts anteriores na ordem. |
+| `enable_ssh.sh`       | Verifica e habilita o serviço SSH no Raspberry Pi.        |
+| `modem_4g_setup.sh`     | Detecta, ativa e configura modems 4G automaticamente.      |
+| `install_configure_tailscale.sh`   | Instala o Tailscale, inicia a autenticação e agenda atualizações. |
+| `configure_ip_route.sh`   | Configura as rotas para o IP Local e configura IP fixo da Placa Rede eth0. |
+| `installer.sh`        | Instalador interativo que executa os três scripts anteriores na ordem. |
 
 ---
 ## ⚙️ Pré-requisitos
@@ -45,7 +46,7 @@ Antes de começar, você precisa de:
     ```
 2. Execute o instalador:
     ```bash
-    sudo ./sanfer_instalador.sh
+    sudo ./installer.sh
     ```
 
 3. Durante a instalação:
@@ -65,7 +66,7 @@ sudo tailscale status
 
 ## 🔄 Atualizações Automáticas
 
-O script `03_instalar_tailscale.sh` configura um cron para atualizar o Tailscale semanalmente:
+O script `install_configure_tailscale.sh` configura um cron para atualizar o Tailscale semanalmente:
 
 - 🕒 Todos os domingos às 03:00  
 - 📝 Log da atualização: `/var/log/tailscale_update.log`  
@@ -76,9 +77,10 @@ O script `03_instalar_tailscale.sh` configura um cron para atualizar o Tailscale
 Caso prefira executar manualmente cada etapa:
 
 ```bash
-sudo ./01_habilitar_ssh.sh
-sudo ./02_configurar_modem.sh
-sudo ./03_instalar_tailscale.sh
+sudo ./enable_ssh.sh
+sudo ./modem_4g_setup.sh
+sudo ./install_configure_tailscale.sh
+sudo ./configure_ip_route.sh
 ````
 
 ## 🧑‍💻 Contribuindo

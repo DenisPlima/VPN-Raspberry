@@ -39,6 +39,7 @@ echo -e "${GREEN}✔ Verificação de permissões OK.${NC}"
 check_script_exists "./enable_ssh.sh"
 check_script_exists "./modem_4g_setup.sh"
 check_script_exists "./install_configure_tailscale.sh"
+check_script_exists "./configure_ip_route.sh"
 
 echo
 echo -e "${BLUE}🔧 Etapa 1: Habilitar o SSH no Raspberry Pi${NC}"
@@ -59,6 +60,12 @@ echo -e "${BLUE}🔒 Etapa 3: Instalar e configurar VPN Tailscale${NC}"
 bash ./install_configure_tailscale.sh
 
 echo -e "${GREEN}✅ Tailscale instalado e configurado com sucesso.${NC}"
+
+echo
+echo -e "${BLUE}🌐 Etapa 4: Instalar e configurar a Rota de Ip Local${NC}"
+bash ./configure_ip_route.sh
+
+echo -e "${GREEN}✅ Rota de IP Local instalada e configurada com sucesso.${NC}"
 
 echo
 echo -e "${BLUE}🚀 Instalação finalizada com sucesso!"
