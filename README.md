@@ -40,7 +40,7 @@ Antes de começar, você precisa de:
 
 1. Clone o repositório:
     ```bash
-    git clone https://github.com/sanfer-automacao/pi-setup.git
+    git clone https://github.com/DenisPlima/VPN-Raspberry.git
     cd pi-setup
     chmod +x *.sh
     ```
