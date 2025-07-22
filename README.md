@@ -8,7 +8,7 @@ Automatize a configuração de Raspberry Pi para aplicações remotas com conect
 Este repositório fornece:
 
 - ✅ Ativação segura do serviço SSH  
-- ✅ Configuração automática de modems 4G USB (Huawei e ZTE)  
+- ✅ Configuração automática de modems 4G USB (Huawei e ZTE) (Vivo, Claro, Tim e Oi)  
 - ✅ Instalação e ativação do Tailscale para VPN zero-config  
 - ✅ Atualizações automáticas semanais do Tailscale via cron
 - ✅ Cria Roteamento para a Subnet da Rede Local
