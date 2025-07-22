@@ -53,7 +53,8 @@ Antes de começar, você precisa de:
 3. Durante a instalação:
     - 🔹 O instalador exibirá mensagens e solicitará sua confirmação antes de cada etapa.  
     - 🔹 Durante a instalação do Tailscale, será fornecido um link de autenticação. Abra-o em um navegador e faça login.  
-    - 🔹 O modem será automaticamente configurado e testado (conexão PPP criada e rota verificada).  
+    - 🔹 O modem será automaticamente configurado e testado (conexão PPP criada e rota verificada).
+    - 🔹 Será criado um roteamento de subnet com a Rede Interna. Abra-o em um navegador no Tailscale e confirme a Subnet.
 
 ---
 ## 🔍 Diagnóstico e Logs
