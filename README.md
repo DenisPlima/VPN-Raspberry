@@ -1,4 +1,4 @@
-# 🧰 Sanfer Raspberry Pi Setup
+# 🧰 VPN Raspberry Pi Setup
 
 Automatize a configuração de Raspberry Pi para aplicações remotas com conectividade 4G e gerenciamento via Tailscale. Este repositório foi desenvolvido para acelerar o comissionamento de dispositivos de campo, reduzindo erros manuais e padronizando o processo.
 
@@ -95,11 +95,6 @@ Contribuições são muito bem-vindas!
 
 Se encontrar algum problema, por favor abra uma Issue descrevendo o erro, como reproduzi-lo e sugestões de correção (se possível).  
 Também aceitamos sugestões de melhoria, novos modems a suportar, ou novas funcionalidades.
-
----
-## 🏢 Sanfer Automação
-
-Projeto mantido por Sanfer Automação  
 
 ---
 ## 📄 Licença
