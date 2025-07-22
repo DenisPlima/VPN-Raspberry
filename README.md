@@ -10,7 +10,8 @@ Este repositório fornece:
 - ✅ Ativação segura do serviço SSH  
 - ✅ Configuração automática de modems 4G USB (Huawei e ZTE)  
 - ✅ Instalação e ativação do Tailscale para VPN zero-config  
-- ✅ Atualizações automáticas semanais do Tailscale via cron  
+- ✅ Atualizações automáticas semanais do Tailscale via cron
+- ✅ Cria Roteamento para a Subnet da Rede Local
 - ✅ Interface interativa para o usuário, com instruções em cada etapa  
 
 ---
