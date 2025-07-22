@@ -57,6 +57,11 @@ Antes de começar, você precisa de:
 ## 🔍 Diagnóstico e Logs
 
 - Log da configuração do modem: `/var/log/modem_4g_setup.log`
+Verifique o status do Tailscale a qualquer momento com:
+
+```bash
+sudo tailscale status
+```
 
 ## 🔄 Atualizações Automáticas
 
@@ -95,7 +100,6 @@ Também aceitamos sugestões de melhoria, novos modems a suportar, ou novas func
 ## 🏢 Sanfer Automação
 
 Projeto mantido por Sanfer Automação  
-🌐 [www.sanferautomacao.com.br](https://www.sanferautomacao.com.br)
 
 ---
 ## 📄 Licença
