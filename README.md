@@ -58,8 +58,56 @@ Antes de começar, você precisa de:
 
 - Log da configuração do modem: `/var/log/modem_4g_setup.log`
 
-Verifique o status do Tailscale a qualquer momento com:
+## 🔄 Atualizações Automáticas
+
+O script `03_instalar_tailscale.sh` configura um cron para atualizar o Tailscale semanalmente:
+
+- 🕒 Todos os domingos às 03:00  
+- 📝 Log da atualização: `/var/log/tailscale_update.log`  
+
+---
+## 🧩 Rodando scripts individualmente
+
+Caso prefira executar manualmente cada etapa:
 
 ```bash
-sudo tailscale status
+sudo ./01_habilitar_ssh.sh
+sudo ./02_configurar_modem.sh
+sudo ./03_instalar_tailscale.sh
+````
+
+## 🧑‍💻 Contribuindo
+
+Contribuições são muito bem-vindas!
+
+1. Faça um fork deste repositório.  
+2. Crie uma branch com sua funcionalidade:  
+   ```bash
+   git checkout -b minha-funcionalidade
+---
+   
+## 🐛 Relatar problemas / Sugestões
+
+Se encontrar algum problema, por favor abra uma Issue descrevendo o erro, como reproduzi-lo e sugestões de correção (se possível).  
+Também aceitamos sugestões de melhoria, novos modems a suportar, ou novas funcionalidades.
+
+---
+## 🏢 Sanfer Automação
+
+Projeto mantido por Sanfer Automação  
+🌐 [www.sanferautomacao.com.br](https://www.sanferautomacao.com.br)
+
+---
+## 📄 Licença
+
+Distribuído sob a Licença MIT.  
+Consulte o arquivo LICENSE para mais detalhes.
+
+---
+
+Desenvolvido com 💻, ☕ e muito cuidado.
+
+
+
+
 
