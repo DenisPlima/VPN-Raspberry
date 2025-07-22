@@ -1,74 +1,49 @@
-<div align="center">
-🚀 Sanfer VPN Setup - Raspberry Pi
-🔐 Instalação assistida de SSH, Modem 4G e VPN Tailscale para comunicação segura e remota com o Raspberry Pi.
+# 🧰 Sanfer Raspberry Pi Setup
 
-</div>
-📂 Visão Geral
-Este repositório contém três scripts principais que automatizam a configuração de um Raspberry Pi com:
+Automatize a configuração de Raspberry Pi para aplicações remotas com conectividade 4G e gerenciamento via Tailscale. Este repositório foi desenvolvido para acelerar o comissionamento de dispositivos de campo, reduzindo erros manuais e padronizando o processo.
 
-🔌 SSH habilitado
+---
 
-📶 Modem 4G com escolha da operadora
+## 📦 O que este projeto faz
 
-🛡️ VPN Tailscale instalada e configurada
+Este repositório fornece:
 
-Além disso, há um script mestre (sanfer_instalador.sh) que executa os três passos em sequência com ajuda interativa ao usuário.
+✅ Ativação segura do serviço SSH  
+✅ Configuração automática de modems 4G USB (Huawei e ZTE)  
+✅ Instalação e ativação do Tailscale para VPN zero-config  
+✅ Atualizações automáticas semanais do Tailscale via `cron`  
+✅ Interface interativa para o usuário, com instruções em cada etapa
 
-📦 Conteúdo do Repositório
-Arquivo	Descrição
-enable_ssh.sh	Ativa e inicia o serviço SSH no Raspberry Pi
-modem_4g_setup.sh	Auxilia na escolha da operadora e cria conexão via modem 4G
-install_configure_tailscale.sh	Instala e configura o Tailscale, criando VPN segura
-sanfer_instalador.sh	Script principal para rodar os 3 scripts acima de forma guiada
+---
 
-🧰 Pré-requisitos
-Raspberry Pi com Raspberry Pi OS (Debian-based)
+## 📁 Estrutura dos arquivos
 
-Acesso root (sudo) no terminal
+| Script                     | Descrição                                                                 |
+|---------------------------|---------------------------------------------------------------------------|
+| `01_habilitar_ssh.sh`     | Verifica e habilita o serviço SSH no Raspberry Pi.                       |
+| `02_configurar_modem.sh`  | Detecta, ativa e configura modems 4G automaticamente.                    |
+| `03_instalar_tailscale.sh`| Instala o Tailscale, inicia a autenticação e agenda atualizações.        |
+| `sanfer_instalador.sh`    | Instalador interativo que executa os três scripts anteriores na ordem.   |
 
-Conexão inicial com teclado/monitor ou via rede local
+---
 
-🧭 Como Usar
-✅ Modo automático (recomendado)
-Clone o repositório:
+## ⚙️ Pré-requisitos
 
-bash
-Copiar
-Editar
-git clone https://github.com/seu-usuario/sanfer-vpn-setup.git
-cd sanfer-vpn-setup
-Dê permissão de execução aos scripts:
+Antes de começar, você precisa de:
 
-bash
-Copiar
-Editar
+- ✅ Raspberry Pi com Raspberry Pi OS (Lite ou Desktop)
+- ✅ Acesso à internet para baixar pacotes
+- ✅ Acesso `sudo` (root) ao terminal
+- ✅ Um modem 4G USB (compatível com ZTE ou Huawei)
+- ✅ Conta no [Tailscale](https://tailscale.com)
+
+---
+
+## 🚀 Instalação passo a passo
+
+### 1. Clone o repositório:
+
+```bash
+git clone https://github.com/SEU_USUARIO/sanfer-raspberry-setup.git
+cd sanfer-raspberry-setup
 chmod +x *.sh
-Execute o instalador como root:
-
-bash
-Copiar
-Editar
-sudo ./sanfer_instalador.sh
-Siga as instruções na tela.
-O instalador pausará entre as etapas para confirmar o andamento.
-
-⚙️ Modo manual (avançado)
-Você também pode executar cada script separadamente, por exemplo:
-
-bash
-Copiar
-Editar
-sudo ./enable_ssh.sh
-sudo ./modem_4g_setup.sh
-sudo ./install_configure_tailscale.sh
-🔐 Segurança
-A VPN Tailscale utiliza criptografia de ponta-a-ponta.
-
-Os scripts não armazenam senhas e usam fontes oficiais.
-
-🤝 Contribuição
-Pull requests e melhorias são bem-vindos. Sinta-se à vontade para clonar, modificar e propor mudanças!
-
-🧑‍💻 Autor
-Denis Lima
-Sanfer Tecnologia
