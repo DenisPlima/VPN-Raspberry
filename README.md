@@ -31,7 +31,7 @@ Antes de começar, você precisa de:
 - ✅ Raspberry Pi com Raspberry Pi OS (Lite ou Desktop)  
 - ✅ Acesso à internet para baixar pacotes  
 - ✅ Acesso sudo (root) ao terminal  
-- ✅ Um modem 4G USB (compatível com ZTE ou Huawei)  
+- ✅ Um modem 4G USB (compatível com ZTE ou Huawei) ou Ethernet/Wi-Fi 
 - ✅ Conta no Tailscale  
 
 ---
