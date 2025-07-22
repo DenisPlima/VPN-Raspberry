@@ -39,7 +39,6 @@ Automatize tarefas críticas como habilitar SSH, configurar modem 4G e instalar 
 - 🔗 Facilita a autenticação inicial via link gerado  
 - 🗓️ Agenda atualizações semanais automáticas via cron  
 - 📈 Permite monitorar o status da VPN facilmente
-
 ---
 
 ## 🛠️ Requisitos
@@ -57,3 +56,29 @@ Automatize tarefas críticas como habilitar SSH, configurar modem 4G e instalar 
 
 ```bash
 sudo bash enable_ssh.sh
+---
+
+## 📂 Logs e Monitoramento
+
+| Script                           | Arquivo de Log                   | Descrição                               |
+|----------------------------------|----------------------------------|------------------------------------------|
+| `modem_4g_setup.sh`              | `/var/log/modem_4g_setup.log`   | Logs detalhados da configuração do modem |
+| `install_configure_tailscale.sh`| `/var/log/tailscale_update.log` | Atualizações automáticas do Tailscale    |
+
+---
+
+## 💡 Dicas finais
+
+- ⚠️ Execute sempre os scripts com `sudo` para evitar falhas de permissão  
+- 🧠 Os scripts foram feitos para facilitar a vida, mas sempre revise os logs se algo não funcionar como esperado  
+- 💬 Sinta-se à vontade para abrir **issues** neste repositório em caso de dúvidas, sugestões ou melhorias  
+- 📚 Os scripts são comentados e organizados para facilitar futuras customizações
+
+---
+
+✨ **Obrigado por usar nossos scripts! Que seu Raspberry Pi esteja sempre conectado e seguro.** ✨  
+💻 Por Sanfer VPN • Scripts automatizados para conectividade em campo.
+
+---
+
+*Este README foi gerado automaticamente com suporte do ChatGPT* 🤖
