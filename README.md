@@ -23,7 +23,7 @@ Este repositório fornece:
 | `modem_4g_setup.sh`     | Detecta, ativa e configura modems 4G automaticamente.      |
 | `install_configure_tailscale.sh`   | Instala o Tailscale, inicia a autenticação e agenda atualizações. |
 | `configure_ip_route.sh`   | Configura as rotas para o IP Local e configura IP fixo da Placa Rede eth0. |
-| `installer.sh`        | Instalador interativo que executa os três scripts anteriores na ordem. |
+| `installer.sh`        | Instalador interativo que executa os quatro scripts anteriores na ordem. |
 
 ---
 ## ⚙️ Pré-requisitos
