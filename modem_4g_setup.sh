@@ -189,4 +189,38 @@ main() {
 }
 
 main "$@"
+### [AUTO RECONNECT SETUP] ###
+echo "🔁 Instalando reconexão automática do modem via systemd..."
 
+# Copia o script atual para ser usado como reconector
+cp "$0" /usr/local/bin/modem_4g_setup.sh
+chmod +x /usr/local/bin/modem_4g_setup.sh
+
+# Cria wrapper de reconexão
+echo '#!/bin/bash
+# Script reconector de modem - reutiliza lógica do modem_4g_setup
+/usr/local/bin/modem_4g_setup.sh >> /var/log/modem_4g_reconnect.log 2>&1
+' | tee /usr/local/bin/conectar_modem.sh > /dev/null
+chmod +x /usr/local/bin/conectar_modem.sh
+
+# Cria unidade systemd
+echo '[Unit]
+Description=Conectar Modem 4G automaticamente
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/conectar_modem.sh
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+' | tee /etc/systemd/system/modem-reconnect.service > /dev/null
+
+# Ativa serviço
+systemctl daemon-reexec
+systemctl daemon-reload
+systemctl enable modem-reconnect.service
+systemctl restart modem-reconnect.service
+
+echo "✅ Serviço de reconexão automática instalado como 'modem-reconnect.service'."
