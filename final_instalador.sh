@@ -10,6 +10,22 @@ COLOR_YELLOW='\033[1;33m'
 COLOR_RED='\033[0;31m'
 COLOR_NC='\033[0m'
 
+log() {
+  echo -e "${COLOR_BLUE}[INFO] $*${COLOR_NC}"
+}
+
+log_success() {
+  echo -e "${COLOR_GREEN}[OK] $*${COLOR_NC}"
+}
+
+log_warn() {
+  echo -e "${COLOR_YELLOW}[AVISO] $*${COLOR_NC}"
+}
+
+log_error() {
+  echo -e "${COLOR_RED}[ERRO] $*${COLOR_NC}" >&2
+}
+
 check_root() {
   if [[ "$EUID" -ne 0 ]]; then
     echo -e "${COLOR_RED}Este script deve ser executado como root.${COLOR_NC}"
@@ -31,6 +47,23 @@ check_dependencies() {
       exit 1
     fi
   done
+}
+
+test_internet() {
+  log "Testando conectividade (ping para 8.8.8.8)..."
+  if ! ping -c 4 8.8.8.8 &>/dev/null; then
+    log_error "Falha no ping para IP."
+    return 1
+  fi
+  log_success "Ping para IP OK."
+
+  log "Testando resolução DNS (ping para google.com)..."
+  if ! ping -c 4 google.com &>/dev/null; then
+    log_warn "Falha na resolução DNS."
+    return 1
+  fi
+  log_success "Resolução DNS OK."
+  return 0
 }
 
 check_connectivity() {
@@ -59,15 +92,14 @@ menu() {
   while true; do
     clear
     echo -e "${COLOR_BLUE}=========== INSTALADOR SANFER - MENU ===========${COLOR_NC}"
-    echo "  ✔ Setup completo para Raspberry Pi via terminal"
+    echo "Setup completo para Raspberry Pi via terminal"
     echo "-----------------------------------------------"
     echo "1) Habilitar SSH"
     echo "2) Configurar Modem 4G"
     echo "3) Instalar e configurar Tailscale"
     echo "4) Configurar Rotas IP Duplas com Tailscale"
     echo "5) Executar instalação completa (todas etapas)"
-    #echo "6) Executar Fallback DHCP"
-    #echo "7) Executar Backup de Configuração"
+    echo "6) Checar conectividade"
     echo "0) Sair"
     echo -n "Escolha uma opção: "
     read -r opt
@@ -87,8 +119,7 @@ menu() {
         run_script install_configure_tailscale.sh
         run_script setup_dual_routes_tailscale.sh
         ;;
-      #6) run_script fallback_dhcp.sh ;;
-      #7) run_script backup_config.sh ;;
+      6) test_internet; pause ;;
       0)
         echo "Saindo..."
         exit 0
