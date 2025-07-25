@@ -66,8 +66,8 @@ menu() {
     echo "3) Instalar e configurar Tailscale"
     echo "4) Configurar Rotas IP Duplas com Tailscale"
     echo "5) Executar instalação completa (todas etapas)"
-    echo "6) Executar Fallback DHCP"
-    echo "7) Executar Backup de Configuração"
+    #echo "6) Executar Fallback DHCP"
+    #echo "7) Executar Backup de Configuração"
     echo "0) Sair"
     echo -n "Escolha uma opção: "
     read -r opt
@@ -87,8 +87,8 @@ menu() {
         run_script install_configure_tailscale.sh
         run_script setup_dual_routes_tailscale.sh
         ;;
-      6) run_script fallback_dhcp.sh ;;
-      7) run_script backup_config.sh ;;
+      #6) run_script fallback_dhcp.sh ;;
+      #7) run_script backup_config.sh ;;
       0)
         echo "Saindo..."
         exit 0
@@ -104,7 +104,7 @@ menu() {
 # Execução principal
 check_root
 check_dependencies
-extract_scripts
+#extract_scripts
 menu
 
 exit 0
