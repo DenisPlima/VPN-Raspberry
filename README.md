@@ -123,15 +123,6 @@ sudo systemctl disable --now tailscaled
 sudo rm -rf /usr/local/bin/set_secondary_ip.sh
 sudo crontab -e  # e remova o @reboot manualmente
 ```
-
----
-
-## 📣 Autor
-
-Desenvolvido por Denis
-Para suporte, entre em contato com a equipe técnica.
-
-
 ---
 
 ## 🤝 Como contribuir
