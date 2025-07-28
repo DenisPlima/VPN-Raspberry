@@ -4,6 +4,7 @@ set -euo pipefail
 # === CONFIG ===
 WORKDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOG_DIR="$WORKDIR/logs"
+mkdir -p "$LOG_DIR"
 COLOR_BLUE='\033[1;34m'
 COLOR_GREEN='\033[0;32m'
 COLOR_YELLOW='\033[1;33m'
@@ -120,8 +121,13 @@ menu() {
         check_connectivity
         run_script install_configure_tailscale.sh
         run_script setup_dual_routes_tailscale.sh
+        run_script install_configure_vnc.sh      
+        log_success "Instalação completa finalizada."
+        echo -e "${COLOR_GREEN}Reinicie o Raspberry Pi para aplicar todas as configurações.${COLOR_NC}"
+        pause
+        reboot 
         ;;
-      7) test_internet; pause ;;
+      7) test_internet; pause ;;      
       0)
         echo "Saindo..."
         exit 0
