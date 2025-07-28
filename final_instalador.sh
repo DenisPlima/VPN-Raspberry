@@ -98,8 +98,9 @@ menu() {
     echo "2) Configurar Modem 4G"
     echo "3) Instalar e configurar Tailscale"
     echo "4) Configurar Rotas IP Duplas com Tailscale"
-    echo "5) Executar instalação completa (todas etapas)"
-    echo "6) Checar conectividade"
+    echo "5) Instalar e configurar VNC"
+    echo "6) Executar instalação completa (todas etapas)"
+    echo "7) Checar conectividade"
     echo "0) Sair"
     echo -n "Escolha uma opção: "
     read -r opt
@@ -112,14 +113,15 @@ menu() {
         run_script install_configure_tailscale.sh
         ;;
       4) run_script setup_dual_routes_tailscale.sh ;;
-      5)
+      5) run_script install_configure_vnc.sh ;;
+      6)
         run_script enable_ssh.sh
         run_script modem_4g_setup.sh
         check_connectivity
         run_script install_configure_tailscale.sh
         run_script setup_dual_routes_tailscale.sh
         ;;
-      6) test_internet; pause ;;
+      7) test_internet; pause ;;
       0)
         echo "Saindo..."
         exit 0
