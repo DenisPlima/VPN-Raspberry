@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # === CONFIG ===
-WORKDIR="/tmp/sanfer_installer"
+WORKDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOG_DIR="$WORKDIR/logs"
 COLOR_BLUE='\033[1;34m'
 COLOR_GREEN='\033[0;32m'
