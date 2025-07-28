@@ -187,4 +187,3 @@ Informe seu sistema, modelo do modem e versão do Raspberry Pi OS
 
 Exemplo de título:
 [BUG] Erro ao instalar e ativar VNC no Raspberry Pi
-
