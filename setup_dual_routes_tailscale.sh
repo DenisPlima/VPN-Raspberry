@@ -29,14 +29,22 @@ echo "✅ IP Industrial: $IP1/$MASK_INDUSTRIAL"
 echo "✅ IP Internet: $IP2/$MASK_INTERNET (com gateway $GATEWAY)"
 
 # [5] Configura IP principal no /etc/dhcpcd.conf
-echo "🔧 Configurando IP da Internet em /etc/dhcpcd.conf..."
-sudo sed -i "/^interface $INTERFACE/,+5d" /etc/dhcpcd.conf
-echo "
+echo "🔧 Configurando IP da Internet (verificando suporte a dhcpcd)..."
+
+if [[ -f /etc/dhcpcd.conf ]]; then
+  sudo sed -i "/^interface $INTERFACE/,+5d" /etc/dhcpcd.conf
+  echo "
 interface $INTERFACE
 static ip_address=$IP2/$MASK_INTERNET
 static routers=$GATEWAY
 static domain_name_servers=$DNS
 " | sudo tee -a /etc/dhcpcd.conf
+  echo -e "\033[0;32m✅ IP estático adicionado ao /etc/dhcpcd.conf\033[0m"
+else
+  echo -e "\033[0;31m[ERRO] Arquivo /etc/dhcpcd.conf não encontrado.\033[0m"
+  echo -e "\033[0;33m[DICA] Instale o dhcpcd com:\033[0m sudo apt install dhcpcd5"
+  echo -e "\033[0;33m[PULANDO] Configuração de IP estático via dhcpcd.\033[0m"
+fi
 
 # [6] Cria script para aplicar IP secundário no boot
 echo "🛠 Criando script de boot para IP secundário ($IP1/$MASK_INDUSTRIAL)..."
@@ -46,9 +54,10 @@ ip addr add $IP1/$MASK_INDUSTRIAL dev $INTERFACE
 " | sudo tee "$BOOT_SCRIPT"
 sudo chmod +x "$BOOT_SCRIPT"
 
-# [7] Ativa script no @reboot (crontab root)
-echo "⏱ Adicionando script ao crontab do root para rodar no boot..."
-(sudo crontab -l 2>/dev/null | grep -v "$BOOT_SCRIPT"; echo "@reboot $BOOT_SCRIPT") | sudo crontab -
+# [7] Adiciona ao crontab do root com verificação segura
+echo "⏱ Garantindo entrada @reboot no crontab do root..."
+CRONTAB_LINE="@reboot $BOOT_SCRIPT"
+( sudo crontab -l 2>/dev/null | grep -Fxv "$CRONTAB_LINE" || true ; echo "$CRONTAB_LINE" ) | sudo crontab -
 
 # [8] Ativa IP forwarding
 echo "🔄 Ativando roteamento IP..."
@@ -59,7 +68,7 @@ sudo sysctl -p
 # [9] Configura NAT
 echo "🌐 Configurando NAT entre redes..."
 sudo iptables -t nat -A POSTROUTING -o "$INTERFACE" -j MASQUERADE
-sudo apt-get install -y iptables-persistent
+sudo DEBIAN_FRONTEND=noninteractive apt-get install -y iptables-persistent
 sudo netfilter-persistent save
 sudo netfilter-persistent reload
 
@@ -75,6 +84,6 @@ echo "🔹 $REDE_INDUSTRIAL"
 echo "🔹 $REDE_INTERNET"
 sudo tailscale up --advertise-routes="$REDE_INDUSTRIAL","$REDE_INTERNET" --accept-dns=false
 
-echo "✅ Finalizado!"
+echo -e "\033[0;32m✅ Finalizado!\033[0m"
 echo "Acesse https://login.tailscale.com/admin/machines e aprove as rotas anunciadas."
 echo "ℹ️ Reinicie a Raspberry para aplicar as mudanças de IP."
