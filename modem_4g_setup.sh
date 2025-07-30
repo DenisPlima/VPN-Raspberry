@@ -148,16 +148,22 @@ main() {
   # Força usb_modeswitch se for um ID conhecido de modo CD-ROM
   KNOWN_STORAGE_IDS=("19d2:0031" "19d2:2000" "12d1:1f01")
   USB_ID="${VENDOR_ID}:${PRODUCT_ID}"
+
   if [[ " ${KNOWN_STORAGE_IDS[*]} " == *"$USB_ID"* ]]; then
-    log_warn "Modem $USB_ID está em modo de armazenamento. Forçando usb_modeswitch..."
+    log_warn "Modem $USB_ID está em modo de armazenamento. Executando usb_modeswitch..."
 
     if [[ "$USB_ID" == "19d2:0031" ]]; then
-      usb_modeswitch -v 0x19d2 -p 0x0031 -i 2 -W -M "5553424312345678000000000000061b000000020000000000000000000000"
+      usb_modeswitch -v 0x19d2 -p 0x0031 -i 2 \
+        -M "5553424312345678000000000000061b000000020000000000000000000000" -W
     else
-      usb_modeswitch -v 0x$VENDOR_ID -p 0x$PRODUCT_ID -M "5553424312345678000000000000061b000000020000000000000000000000"
+      usb_modeswitch -v 0x$VENDOR_ID -p 0x$PRODUCT_ID \
+        -M "5553424312345678000000000000061b000000020000000000000000000000" -W
     fi
 
-    sleep 5
+    log "Aguardando mudança de modo USB..."
+    sleep 8
+    log "Recarregando lista de dispositivos USB..."
+    list_usb
   else
     log_success "Modem parece já estar no modo modem."
   fi
@@ -186,4 +192,3 @@ main() {
 }
 
 main "$@"
-
