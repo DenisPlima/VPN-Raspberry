@@ -123,6 +123,38 @@ test_internet() {
   return 0
 }
 
+force_physical_reconnect() {
+  log_warn "O modem não mudou de modo após o usb_modeswitch."
+  echo -e "${YELLOW}Por favor, remova e reconecte fisicamente o modem USB.${NC}"
+  read -p "Pressione Enter após reconectar o modem..."
+
+  local attempt=1
+  while (( attempt <= MAX_ATTEMPTS )); do
+    local new_modem
+    new_modem=$(lsusb | grep -Ei "zte|huawei" || true)
+
+    if [[ -n "$new_modem" && "$new_modem" != "$modem_line" ]]; then
+      log_success "Novo dispositivo detectado:"
+      echo "$new_modem" | tee -a "$LOG_FILE"
+      echo "$new_modem" | head -n1
+      modem_line="$new_modem"
+      if [[ $modem_line =~ ID[[:space:]]([0-9a-f]{4}):([0-9a-f]{4}) ]]; then
+        VENDOR_ID="${BASH_REMATCH[1]}"
+        PRODUCT_ID="${BASH_REMATCH[2]}"
+        USB_ID="${VENDOR_ID}:${PRODUCT_ID}"
+        return 0
+      fi
+    fi
+
+    log "Aguardando reconexão do modem... ($attempt/$MAX_ATTEMPTS)"
+    sleep "$SLEEP_TIME"
+    ((attempt++))
+  done
+
+  log_error "Modem não foi reconectado corretamente. Encerrando."
+  exit 1
+}
+
 main() {
   touch "$LOG_FILE"
   chmod 644 "$LOG_FILE"
@@ -145,7 +177,6 @@ main() {
     exit 1
   fi
 
-  # Força usb_modeswitch se for um ID conhecido de modo CD-ROM
   KNOWN_STORAGE_IDS=("19d2:0031" "19d2:2000" "12d1:1f01")
   USB_ID="${VENDOR_ID}:${PRODUCT_ID}"
 
@@ -164,6 +195,11 @@ main() {
     sleep 8
     log "Recarregando lista de dispositivos USB..."
     list_usb
+
+    new_usb_list=$(lsusb)
+    if echo "$new_usb_list" | grep -q "$USB_ID"; then
+      force_physical_reconnect
+    fi
   else
     log_success "Modem parece já estar no modo modem."
   fi
