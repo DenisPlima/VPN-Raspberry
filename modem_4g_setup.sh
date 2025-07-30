@@ -1,9 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
-LOG_FILE="/var/log/modem_4g_setup.log"
-MAX_ATTEMPTS=15
+LOG_FILE="/var/log/modem_qualcomm_setup.log"
 SLEEP_TIME=2
+MAX_ATTEMPTS=10
 
 # Cores
 RED='\033[0;31m'
@@ -24,7 +24,7 @@ check_root() {
 }
 
 install_packages() {
-  local pkgs=(usb-modeswitch modemmanager ppp)
+  local pkgs=(usb-modeswitch modemmanager)
   for pkg in "${pkgs[@]}"; do
     if ! dpkg -s "$pkg" &>/dev/null; then
       log "Instalando $pkg..."
@@ -35,40 +35,20 @@ install_packages() {
   done
 }
 
-list_usb() {
-  log "Dispositivos USB conectados:"
-  lsusb | tee -a "$LOG_FILE"
-}
-
-detect_modem() {
-  local modems
-  modems=$(lsusb 2>/dev/null | grep -Ei "zte|huawei" || true)
-  if [[ -z "$modems" ]]; then
-    log_warn "Nenhum modem ZTE ou Huawei detectado via USB."
-    echo
-    read -p "Deseja tentar novamente? (s/n): " opcao
-    if [[ "$opcao" =~ ^[sS]$ ]]; then
-      list_usb
-      echo -e "${YELLOW}Conecte o modem e pressione Enter para continuar...${NC}"
-      read
-      exec "$0"
-    else
-      log_error "Encerrando configuração do modem por ausência de hardware."
-      exit 0
-    fi
-  fi
-  log "Modems detectados:"
-  echo "$modems" | tee -a "$LOG_FILE"
-  echo "$modems" | head -n1
+apply_modeswitch() {
+  log "Executando usb_modeswitch para 05c6:f00e (Qualcomm)..."
+  usb_modeswitch -v 0x05c6 -p 0xf00e \
+    -M "5553424312345678000000000000061b000000020000000000000000000000" -W
+  sleep 10
 }
 
 wait_for_modem() {
   local attempt=1
   while (( attempt <= MAX_ATTEMPTS )); do
-    local modem_path
-    modem_path=$(mmcli -L | grep -oE '/org/freedesktop/ModemManager1/Modem/[0-9]+' || true)
-    if [[ -n "$modem_path" ]]; then
-      echo "$modem_path"
+    local modem
+    modem=$(mmcli -L | grep -oE '/org/freedesktop/ModemManager1/Modem/[0-9]+' || true)
+    if [[ -n "$modem" ]]; then
+      echo "$modem"
       return 0
     fi
     log_warn "Tentativa $attempt/$MAX_ATTEMPTS: aguardando modem aparecer..."
@@ -80,150 +60,63 @@ wait_for_modem() {
 
 select_operadora() {
   echo "Selecione sua operadora:"
-  PS3="Digite o número da operadora e pressione Enter: "
+  PS3="Digite o número da operadora: "
   select op in Vivo Claro Tim Oi; do
     case $op in
-      Vivo) OPERADORA="Vivo"; APN="zap.vivo.com.br"; break ;;
-      Claro) OPERADORA="Claro"; APN="claro.com.br"; break ;;
-      Tim) OPERADORA="Tim"; APN="tim.br"; break ;;
-      Oi) OPERADORA="Oi"; APN="gprs.oi.com.br"; break ;;
-      *) echo "Opção inválida. Tente novamente." ;;
+      Vivo) APN="zap.vivo.com.br"; break ;;
+      Claro) APN="claro.com.br"; break ;;
+      Tim) APN="tim.br"; break ;;
+      Oi) APN="gprs.oi.com.br"; break ;;
+      *) echo "Opção inválida." ;;
     esac
   done
 }
 
-check_connection_status() {
-  mmcli -m "$MODEM_PATH" | grep -i "status:" | awk '{print $2}' || echo "unknown"
+connect_modem() {
+  log "Tentando conectar com APN: $APN"
+  if mmcli -m "$MODEM_PATH" --simple-connect="apn=$APN"; then
+    log_success "Conexão realizada com sucesso."
+  else
+    log_warn "Falha ao conectar. Verifique sinal ou chip."
+  fi
 }
 
-try_connect() {
-  local apn=$1
-  log "Tentando conectar com APN: $apn"
-  if ! mmcli -m "$MODEM_PATH" --simple-connect="apn=$apn"; then
-    log_warn "Falha ao conectar. Possivelmente já conectado ou porta ocupada."
-    return 1
+test_connection() {
+  log "Testando ping para 8.8.8.8..."
+  if ping -c 3 8.8.8.8 &>/dev/null; then
+    log_success "Conectividade IP OK."
+  else
+    log_warn "Ping para IP falhou."
   fi
-  return 0
-}
 
-test_internet() {
-  log "Testando conectividade (ping para 8.8.8.8)..."
-  if ! ping -c 4 8.8.8.8 &>/dev/null; then
-    log_error "Falha no ping para IP."
-    return 1
-  fi
-  log_success "Ping para IP OK."
-
-  log "Testando resolução DNS (ping para google.com)..."
-  if ! ping -c 4 google.com &>/dev/null; then
+  log "Testando DNS (ping para google.com)..."
+  if ping -c 3 google.com &>/dev/null; then
+    log_success "Resolução DNS OK."
+  else
     log_warn "Falha na resolução DNS."
-    return 1
   fi
-  log_success "Resolução DNS OK."
-  return 0
-}
-
-force_physical_reconnect() {
-  log_warn "O modem não mudou de modo após o usb_modeswitch."
-  echo -e "${YELLOW}Por favor, remova e reconecte fisicamente o modem USB.${NC}"
-  read -p "Pressione Enter após reconectar o modem..."
-
-  local attempt=1
-  while (( attempt <= MAX_ATTEMPTS )); do
-    local new_modem
-    new_modem=$(lsusb | grep -Ei "zte|huawei" || true)
-
-    if [[ -n "$new_modem" && "$new_modem" != "$modem_line" ]]; then
-      log_success "Novo dispositivo detectado:"
-      echo "$new_modem" | tee -a "$LOG_FILE"
-      echo "$new_modem" | head -n1
-      modem_line="$new_modem"
-      if [[ $modem_line =~ ID[[:space:]]([0-9a-f]{4}):([0-9a-f]{4}) ]]; then
-        VENDOR_ID="${BASH_REMATCH[1]}"
-        PRODUCT_ID="${BASH_REMATCH[2]}"
-        USB_ID="${VENDOR_ID}:${PRODUCT_ID}"
-        return 0
-      fi
-    fi
-
-    log "Aguardando reconexão do modem... ($attempt/$MAX_ATTEMPTS)"
-    sleep "$SLEEP_TIME"
-    ((attempt++))
-  done
-
-  log_error "Modem não foi reconectado corretamente. Encerrando."
-  exit 1
 }
 
 main() {
   touch "$LOG_FILE"
   chmod 644 "$LOG_FILE"
-  log "Iniciando configuração do modem 4G"
 
   check_root
-  log "Atualizando sistema..."
-  apt update && apt upgrade -y
   install_packages
-  list_usb
+  apply_modeswitch
 
-  modem_line=$(detect_modem)
-
-  if [[ $modem_line =~ ID[[:space:]]([0-9a-f]{4}):([0-9a-f]{4}) ]]; then
-    VENDOR_ID="${BASH_REMATCH[1]}"
-    PRODUCT_ID="${BASH_REMATCH[2]}"
-    log "Modem detectado (VID:PID=$VENDOR_ID:$PRODUCT_ID)"
-  else
-    log_error "Não foi possível extrair VID:PID do modem."
+  MODEM_PATH=$(wait_for_modem)
+  if [[ -z "$MODEM_PATH" ]]; then
+    log_error "Modem não detectado após usb_modeswitch. Encerrando."
     exit 1
   fi
 
-  KNOWN_STORAGE_IDS=("19d2:0031" "19d2:2000" "12d1:1f01")
-  USB_ID="${VENDOR_ID}:${PRODUCT_ID}"
-
-  if [[ " ${KNOWN_STORAGE_IDS[*]} " == *"$USB_ID"* ]]; then
-    log_warn "Modem $USB_ID está em modo de armazenamento. Executando usb_modeswitch..."
-
-    if [[ "$USB_ID" == "19d2:0031" ]]; then
-      usb_modeswitch -v 0x19d2 -p 0x0031 -i 2 \
-        -M "5553424312345678000000000000061b000000020000000000000000000000" -W
-    else
-      usb_modeswitch -v 0x$VENDOR_ID -p 0x$PRODUCT_ID \
-        -M "5553424312345678000000000000061b000000020000000000000000000000" -W
-    fi
-
-    log "Aguardando mudança de modo USB..."
-    sleep 8
-    log "Recarregando lista de dispositivos USB..."
-    list_usb
-
-    new_usb_list=$(lsusb)
-    if echo "$new_usb_list" | grep -q "$USB_ID"; then
-      force_physical_reconnect
-    fi
-  else
-    log_success "Modem parece já estar no modo modem."
-  fi
-
-  MODEM_PATH=$(wait_for_modem) || {
-    log_error "Modem não detectado após múltiplas tentativas."
-    exit 1
-  }
-  log "Modem disponível em: $MODEM_PATH"
+  log_success "Modem detectado em $MODEM_PATH"
 
   select_operadora
-  log "Operadora selecionada: $OPERADORA"
-  log "APN selecionada: $APN"
+  connect_modem
+  test_connection
 
-  status=$(check_connection_status)
-  if [[ "$status" == "connected" ]]; then
-    log_success "Modem já conectado."
-  else
-    if ! try_connect "$APN"; then
-      log_warn "Tentativa de conexão falhou, testando internet..."
-    fi
-  fi
-
-  test_internet
   log_success "Configuração concluída."
 }
 
