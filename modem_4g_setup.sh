@@ -1,123 +1,71 @@
 #!/bin/bash
 set -euo pipefail
 
-LOG_FILE="/var/log/modem_qualcomm_setup.log"
+LOG_FILE="/var/log/modem_qualcomm_networkmode.log"
+MAX_ATTEMPTS=15
 SLEEP_TIME=2
-MAX_ATTEMPTS=10
 
-# Cores
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
 GREEN='\033[0;32m'
 NC='\033[0m'
 
 log() { echo -e "[$(date '+%H:%M:%S')] $1" | tee -a "$LOG_FILE"; }
-log_success() { echo -e "${GREEN}[$(date '+%H:%M:%S')] $1${NC}" | tee -a "$LOG_FILE"; }
-log_warn() { echo -e "${YELLOW}[$(date '+%H:%M:%S')] $1${NC}" | tee -a "$LOG_FILE"; }
-log_error() { echo -e "${RED}[$(date '+%H:%M:%S')] $1${NC}" | tee -a "$LOG_FILE"; }
+log_warn() { log "${YELLOW}⚠ $1${NC}"; }
+log_error() { log "${RED}✖ $1${NC}"; }
+log_success() { log "${GREEN}✔ $1${NC}"; }
 
-check_root() {
-  if [[ "$(id -u)" -ne 0 ]]; then
-    log_error "Execute o script como root (sudo)."
-    exit 1
-  fi
+check_dependencies() {
+  log "Verificando pacotes necessários..."
+  sudo apt-get update -qq
+  sudo apt-get install -y usbutils iproute2 dhcpcd5
 }
 
-install_packages() {
-  local pkgs=(usb-modeswitch modemmanager)
-  for pkg in "${pkgs[@]}"; do
-    if ! dpkg -s "$pkg" &>/dev/null; then
-      log "Instalando $pkg..."
-      apt install -y "$pkg"
-    else
-      log_success "$pkg já instalado."
+wait_for_interface() {
+  log "Aguardando interface de rede do modem (wwan0, usb0, etc)..."
+  for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
+    IFACE=$(ip -brief link | awk '{print $1}' | grep -E '^wwan[0-9]+|^usb[0-9]+' || true)
+    if [[ -n "$IFACE" ]]; then
+      log_success "Interface detectada: $IFACE"
+      return
     fi
-  done
-}
-
-apply_modeswitch() {
-  log "Executando usb_modeswitch para 05c6:f00e (Qualcomm)..."
-  usb_modeswitch -v 0x05c6 -p 0xf00e \
-    -M "5553424312345678000000000000061b000000020000000000000000000000" -W
-  sleep 10
-}
-
-wait_for_modem() {
-  local attempt=1
-  while (( attempt <= MAX_ATTEMPTS )); do
-    local modem
-    modem=$(mmcli -L | grep -oE '/org/freedesktop/ModemManager1/Modem/[0-9]+' || true)
-    if [[ -n "$modem" ]]; then
-      echo "$modem"
-      return 0
-    fi
-    log_warn "Tentativa $attempt/$MAX_ATTEMPTS: aguardando modem aparecer..."
+    log "Tentativa $attempt/$MAX_ATTEMPTS..."
     sleep "$SLEEP_TIME"
-    ((attempt++))
   done
-  return 1
+  log_error "Nenhuma interface de rede do modem foi detectada."
+  exit 1
 }
 
-select_operadora() {
-  echo "Selecione sua operadora:"
-  PS3="Digite o número da operadora: "
-  select op in Vivo Claro Tim Oi; do
-    case $op in
-      Vivo) APN="zap.vivo.com.br"; break ;;
-      Claro) APN="claro.com.br"; break ;;
-      Tim) APN="tim.br"; break ;;
-      Oi) APN="gprs.oi.com.br"; break ;;
-      *) echo "Opção inválida." ;;
-    esac
-  done
-}
-
-connect_modem() {
-  log "Tentando conectar com APN: $APN"
-  if mmcli -m "$MODEM_PATH" --simple-connect="apn=$APN"; then
-    log_success "Conexão realizada com sucesso."
-  else
-    log_warn "Falha ao conectar. Verifique sinal ou chip."
-  fi
+start_connection() {
+  log "Solicitando IP via DHCP para interface $IFACE..."
+  sudo dhclient -v "$IFACE" || {
+    log_warn "Falha ao obter IP. Tentando continuar assim mesmo..."
+  }
 }
 
 test_connection() {
   log "Testando ping para 8.8.8.8..."
-  if ping -c 3 8.8.8.8 &>/dev/null; then
-    log_success "Conectividade IP OK."
+  if ping -c 3 -W 2 8.8.8.8 >/dev/null; then
+    log_success "Conexão com a internet OK via IP."
   else
-    log_warn "Ping para IP falhou."
+    log_warn "Sem resposta de 8.8.8.8."
   fi
 
-  log "Testando DNS (ping para google.com)..."
-  if ping -c 3 google.com &>/dev/null; then
+  log "Testando DNS (google.com)..."
+  if ping -c 2 -W 2 google.com >/dev/null; then
     log_success "Resolução DNS OK."
   else
-    log_warn "Falha na resolução DNS."
+    log_warn "Falha na resolução de DNS."
   fi
 }
 
 main() {
-  touch "$LOG_FILE"
-  chmod 644 "$LOG_FILE"
-
-  check_root
-  install_packages
-  apply_modeswitch
-
-  MODEM_PATH=$(wait_for_modem)
-  if [[ -z "$MODEM_PATH" ]]; then
-    log_error "Modem não detectado após usb_modeswitch. Encerrando."
-    exit 1
-  fi
-
-  log_success "Modem detectado em $MODEM_PATH"
-
-  select_operadora
-  connect_modem
+  log "🟢 Iniciando conexão com modem Qualcomm via interface de rede..."
+  check_dependencies
+  wait_for_interface
+  start_connection
   test_connection
-
-  log_success "Configuração concluída."
+  log_success "Script finalizado."
 }
 
-main "$@"
+main
