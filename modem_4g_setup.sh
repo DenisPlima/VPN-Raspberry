@@ -5,7 +5,7 @@ LOG_FILE="/var/log/modem_4g_setup.log"
 MAX_ATTEMPTS=15
 SLEEP_TIME=2
 
-# Cores para saída
+# Cores
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
 GREEN='\033[0;32m'
@@ -60,19 +60,6 @@ detect_modem() {
   log "Modems detectados:"
   echo "$modems" | tee -a "$LOG_FILE"
   echo "$modems" | head -n1
-}
-
-get_interface_class() {
-  local vid=$1
-  local pid=$2
-  local iface_class
-  iface_class=$(lsusb -v -d ${vid}:${pid} 2>/dev/null | grep -m1 bInterfaceClass | awk '{print $2}')
-  if [[ -z "$iface_class" ]]; then
-    log_warn "Não foi possível obter classe da interface USB, assumindo modo modem."
-    echo "ff"
-  else
-    echo "$iface_class"
-  fi
 }
 
 wait_for_modem() {
@@ -158,15 +145,21 @@ main() {
     exit 1
   fi
 
-  iface_class=$(get_interface_class "$VENDOR_ID" "$PRODUCT_ID")
-  log "Classe USB da interface: $iface_class"
+  # Força usb_modeswitch se for um ID conhecido de modo CD-ROM
+  KNOWN_STORAGE_IDS=("19d2:0031" "19d2:2000" "12d1:1f01")
+  USB_ID="${VENDOR_ID}:${PRODUCT_ID}"
+  if [[ " ${KNOWN_STORAGE_IDS[*]} " == *"$USB_ID"* ]]; then
+    log_warn "Modem $USB_ID está em modo de armazenamento. Forçando usb_modeswitch..."
 
-  if [[ "$iface_class" == "08" ]]; then
-    log "Modem está em modo armazenamento, executando usb_modeswitch..."
-    usb_modeswitch -v 0x$VENDOR_ID -p 0x$PRODUCT_ID -V 0x$VENDOR_ID -P 0x$PRODUCT_ID -M "5553424312345678000000000000061b000000020000000000000000000000"
+    if [[ "$USB_ID" == "19d2:0031" ]]; then
+      usb_modeswitch -v 0x19d2 -p 0x0031 -i 2 -W -M "5553424312345678000000000000061b000000020000000000000000000000"
+    else
+      usb_modeswitch -v 0x$VENDOR_ID -p 0x$PRODUCT_ID -M "5553424312345678000000000000061b000000020000000000000000000000"
+    fi
+
     sleep 5
   else
-    log_success "Modem já no modo modem, pulando usb_modeswitch."
+    log_success "Modem parece já estar no modo modem."
   fi
 
   MODEM_PATH=$(wait_for_modem) || {
@@ -188,14 +181,9 @@ main() {
     fi
   fi
 
-  if test_internet; then
-    log_success "Internet conectada com sucesso via $OPERADORA"
-  else
-    log_error "Falha na conexão com a internet."
-    exit 1
-  fi
-
+  test_internet
   log_success "Configuração concluída."
 }
 
 main "$@"
+
