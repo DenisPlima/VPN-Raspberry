@@ -129,8 +129,7 @@ sudo systemctl disable vncserver-x11-serviced.service
 
 ## 👨‍💻 Autor
 
-Desenvolvido por **Denis**  
-Para dúvidas ou suporte técnico, entre em contato com a equipe Sanfer.
+Para dúvidas ou suporte técnico, entre em contato..
 
 ---
 
