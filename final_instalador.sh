@@ -44,8 +44,14 @@ check_dependencies() {
   local deps=(bash iptables curl tar base64 ping)
   for cmd in "${deps[@]}"; do
     if ! command -v "$cmd" >/dev/null; then
-      echo -e "${COLOR_RED}Dependência ausente: $cmd${COLOR_NC}"
-      exit 1
+      echo -e "${COLOR_YELLOW}[AVISO] Dependência ausente: $cmd. Tentando instalar...${COLOR_NC}"
+      sudo apt update
+      if sudo apt install -y "$cmd"; then
+        echo -e "${COLOR_GREEN}[OK] $cmd instalado com sucesso.${COLOR_NC}"
+      else
+        echo -e "${COLOR_RED}[ERRO] Falha ao instalar $cmd. Abortando.${COLOR_NC}"
+        exit 1
+      fi
     fi
   done
 }
