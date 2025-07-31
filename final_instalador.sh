@@ -102,38 +102,29 @@ menu() {
     echo "Setup completo para Raspberry Pi via terminal"
     echo "-----------------------------------------------"
     echo "1) Habilitar SSH"
-    echo "2) Configurar Modem 4G"
-    echo "3) Instalar e configurar Tailscale"
-    echo "4) Configurar Rotas IP Duplas com Tailscale"
-    echo "5) Instalar e configurar VNC"
-    echo "6) Executar instalação completa (todas etapas)"
-    echo "7) Checar conectividade"
+    echo "2) Instalar e configurar Tailscale"
+    echo "3) Configurar Rotas IP Duplas com Tailscale"
+    echo "4) Executar instalação completa (todas etapas)"
+    echo "5) Checar conectividade"
     echo "0) Sair"
     echo -n "Escolha uma opção: "
     read -r opt
 
     case "$opt" in
       1) run_script enable_ssh.sh ;;
-      2) run_script modem_4g_setup.sh ;;
-      3) 
-        check_connectivity
-        run_script install_configure_tailscale.sh
-        ;;
-      4) run_script setup_dual_routes_tailscale.sh ;;
-      5) run_script install_configure_vnc.sh ;;
-      6)
+      2) run_script install_configure_tailscale.sh ;;
+      3) run_script setup_one_route_tailscale.sh ;;
+      4)
         run_script enable_ssh.sh
-        run_script modem_4g_setup.sh
-        check_connectivity
         run_script install_configure_tailscale.sh
-        run_script setup_dual_routes_tailscale.sh
-        run_script install_configure_vnc.sh      
+        run_script setup_one_route_tailscale.sh
+        run_script install_configure_vnc.sh
         log_success "Instalação completa finalizada."
         echo -e "${COLOR_GREEN}Reinicie o Raspberry Pi para aplicar todas as configurações.${COLOR_NC}"
         pause
         reboot 
         ;;
-      7) test_internet; pause ;;      
+      5) test_internet; pause ;;
       0)
         echo "Saindo..."
         exit 0
