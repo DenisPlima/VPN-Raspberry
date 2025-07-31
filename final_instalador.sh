@@ -103,7 +103,7 @@ menu() {
     echo "-----------------------------------------------"
     echo "1) Habilitar SSH"
     echo "2) Instalar e configurar Tailscale"
-    echo "3) Configurar Rotas IP Duplas com Tailscale"
+    echo "3) Configurar Rotas IP com Tailscale"
     echo "4) Executar instalação completa (todas etapas)"
     echo "5) Checar conectividade"
     echo "0) Sair"
