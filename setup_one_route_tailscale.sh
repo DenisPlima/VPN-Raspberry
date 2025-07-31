@@ -16,7 +16,7 @@ BASE_INDUSTRIAL=$(echo "$REDE_INDUSTRIAL" | cut -d'/' -f1 | awk -F. '{print $1".
 MASK_INDUSTRIAL=$(echo "$REDE_INDUSTRIAL" | cut -d'/' -f2)
 IP1="$BASE_INDUSTRIAL.$FINAL_IP_INDUSTRIAL"
 
-echo "✅ IP Industrial: $IP1/$MASK_INDUSTRAL"
+echo "✅ IP Industrial: $IP1/$MASK_INDUSTRIAL"
 
 # [4] Criar script de boot para aplicar IP fixo
 echo "🛠 Criando script de boot para IP fixo..."
