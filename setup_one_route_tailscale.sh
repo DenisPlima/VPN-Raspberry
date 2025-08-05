@@ -18,37 +18,64 @@ IP1="$BASE_INDUSTRIAL.$FINAL_IP_INDUSTRIAL"
 
 echo "✅ IP Industrial: $IP1/$MASK_INDUSTRIAL"
 
-# [4] Configurar IP fixo via dhcpcd.conf (sem gateway)
-echo "🔧 Configurando IP fixo via /etc/dhcpcd.conf (sem gateway)..."
+##############################
+# [4] Configurar dhcpcd.conf #
+##############################
+echo "🔧 Ajustando /etc/dhcpcd.conf ..."
 if [[ -f /etc/dhcpcd.conf ]]; then
-  sudo sed -i "/^interface $INTERFACE/,+5d" /etc/dhcpcd.conf
-  echo "
+  # Backup
+  sudo cp /etc/dhcpcd.conf /etc/dhcpcd.conf.bkp.$(date +%s)
+  echo "  🗂️ Backup salvo como /etc/dhcpcd.conf.bkp.<timestamp>"
+
+  # Remove linhas globais antigas (static ip_address / nogateway fora das interfaces)
+  sudo sed -i '/^static ip_address=/d' /etc/dhcpcd.conf
+  sudo sed -i '/^nogateway$/d' /etc/dhcpcd.conf
+
+  # Remove blocos antigos das interfaces eth0 e wlan0 (até 5 linhas depois)
+  sudo sed -i "/^interface eth0/,+5d" /etc/dhcpcd.conf
+  sudo sed -i "/^interface wlan0/,+5d" /etc/dhcpcd.conf
+
+  # Insere novos blocos
+  cat <<EOF | sudo tee -a /etc/dhcpcd.conf > /dev/null
+
+# === CONFIG INDUSTRIAL AUTOMÁTICA ===
 interface $INTERFACE
 static ip_address=$IP1/$MASK_INDUSTRIAL
 nogateway
-" | sudo tee -a /etc/dhcpcd.conf > /dev/null
-  echo -e "\033[0;32m✅ IP fixo salvo com sucesso no dhcpcd.conf\033[0m"
+
+interface wlan0
+dhcp
+# === FIM CONFIG INDUSTRIAL ===
+EOF
+
+  echo -e "\033[0;32m✅ dhcpcd.conf configurado com sucesso!\033[0m"
 else
   echo -e "\033[0;31m[ERRO] Arquivo /etc/dhcpcd.conf não encontrado.\033[0m"
   exit 1
 fi
 
-# [5] Ativar roteamento IP (caso use Tailscale para acesso à rede industrial)
+#####################################
+# [5] Ativar roteamento IP (opcional)
+#####################################
 echo "🔄 Ativando roteamento IP (ip_forward)..."
 sudo sed -i '/^net.ipv4.ip_forward/d' /etc/sysctl.conf
 echo 'net.ipv4.ip_forward=1' | sudo tee -a /etc/sysctl.conf > /dev/null
 sudo sysctl -p
 
-# [6] Instalar Tailscale (se necessário)
+##########################
+# [6] Instalar Tailscale
+##########################
 if ! command -v tailscale &> /dev/null; then
   echo "⬇️ Instalando Tailscale..."
   curl -fsSL https://tailscale.com/install.sh | sh
 fi
 
-# [7] Subir Tailscale com rota anunciada
+#####################################################
+# [7] Subir tailscale com route advertise
+#####################################################
 echo "🚀 Subindo Tailscale com anúncio da rota: $REDE_INDUSTRIAL"
 sudo tailscale up --advertise-routes="$REDE_INDUSTRIAL" --accept-dns=false
 
 echo -e "\033[0;32m✅ Configuração finalizada com sucesso!\033[0m"
-echo "Acesse https://login.tailscale.com/admin/machines para aprovar a rota anunciada."
-echo "ℹ️ Reinicie a Raspberry Pi para aplicar a nova configuração de IP."
+echo "📝 Acesse https://login.tailscale.com/admin/machines para aprovar a rota anunciada."
+echo "⚠️ Reinicie a Raspberry Pi para aplicar a nova configuração de IP."
