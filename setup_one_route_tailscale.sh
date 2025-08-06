@@ -27,21 +27,22 @@ if [[ -f /etc/dhcpcd.conf ]]; then
   sudo cp /etc/dhcpcd.conf /etc/dhcpcd.conf.bkp.$(date +%s)
   echo "  🗂️ Backup salvo como /etc/dhcpcd.conf.bkp.<timestamp>"
 
-  # Remove linhas globais antigas (static ip_address / nogateway fora das interfaces)
+  # Remove linhas antigas relacionadas a IP estático e nogateway
   sudo sed -i '/^static ip_address=/d' /etc/dhcpcd.conf
   sudo sed -i '/^nogateway$/d' /etc/dhcpcd.conf
 
-  # Remove blocos antigos das interfaces eth0 e wlan0 (até 5 linhas depois)
-  sudo sed -i "/^interface eth0/,+5d" /etc/dhcpcd.conf
+  # Remove blocos antigos das interfaces (até 5 linhas após "interface X")
+  sudo sed -i "/^interface $INTERFACE/,+5d" /etc/dhcpcd.conf
   sudo sed -i "/^interface wlan0/,+5d" /etc/dhcpcd.conf
 
-  # Insere novos blocos
+  # Insere nova configuração
   cat <<EOF | sudo tee -a /etc/dhcpcd.conf > /dev/null
 
 # === CONFIG INDUSTRIAL AUTOMÁTICA ===
 interface $INTERFACE
 static ip_address=$IP1/$MASK_INDUSTRIAL
 nogateway
+metric 400
 
 interface wlan0
 dhcp
@@ -54,25 +55,31 @@ else
   exit 1
 fi
 
+###########################################
+# [5] Remove gateway padrão via eth0 (se tiver)
+###########################################
+echo "🚫 Removendo possíveis rotas default pela $INTERFACE..."
+sudo ip route del default dev "$INTERFACE" 2>/dev/null || true
+
 #####################################
-# [5] Ativar roteamento IP (opcional)
+# [6] Ativar roteamento IP (para tailscale)
 #####################################
 echo "🔄 Ativando roteamento IP (ip_forward)..."
 sudo sed -i '/^net.ipv4.ip_forward/d' /etc/sysctl.conf
 echo 'net.ipv4.ip_forward=1' | sudo tee -a /etc/sysctl.conf > /dev/null
 sudo sysctl -p
 
-##########################
-# [6] Instalar Tailscale
-##########################
+#################################
+# [7] Instalar Tailscale (se não tiver)
+#################################
 if ! command -v tailscale &> /dev/null; then
   echo "⬇️ Instalando Tailscale..."
   curl -fsSL https://tailscale.com/install.sh | sh
 fi
 
-#####################################################
-# [7] Subir tailscale com route advertise
-#####################################################
+#################################
+# [8] Subir tailscale com rota
+#################################
 echo "🚀 Subindo Tailscale com anúncio da rota: $REDE_INDUSTRIAL"
 sudo tailscale up --advertise-routes="$REDE_INDUSTRIAL" --accept-dns=false
 
